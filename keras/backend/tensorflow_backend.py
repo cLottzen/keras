@@ -3855,3 +3855,110 @@ def local_conv2d(inputs, kernel, kernel_size, strides, output_shape, data_format
     else:
         output = permute_dimensions(output, (2, 0, 1, 3))
     return output
+
+
+
+def pool2d_with_argmax(x, pool_size, strides=(1, 1),
+           padding='valid', data_format=None):
+    """2D Pooling with indices's
+
+    # Arguments
+        x: Tensor or variable.
+        pool_size: tuple of 2 integers.
+        strides: tuple of 2 integers.
+        padding: string, `"same"` or `"valid"`.
+        data_format: string, `"channels_last"` or `"channels_first"`.
+        pool_mode: string, `"max"` or `"avg"`.
+
+    # Returns
+        A list of two tensors, [result of 2D pooling, pooling indices's]
+        Note, that the pooling indices's are casted as float32 in order to concatenate
+        them with the output tensor.
+
+    # Raises
+        ValueError: if `data_format` is neither `"channels_last"` or `"channels_first"`.
+        ValueError: if `pool_mode` is neither `"max"` or `"avg"`.
+    """
+
+    ''' get separate inputs, i.e. data and indices's 
+    '''
+    if data_format is None:
+        data_format = image_data_format()
+    if data_format not in {'channels_first', 'channels_last'}:
+        raise ValueError('Unknown data_format ' + str(data_format))
+
+    padding = _preprocess_padding(padding)
+    strides = (1,) + strides + (1,)
+    pool_size = (1,) + pool_size + (1,)
+
+    x = _preprocess_conv2d_input(x, data_format)
+    x, idx = tf.nn.max_pool_with_argmax(x, pool_size, strides, padding=padding)
+    x = _postprocess_conv2d_output(x, data_format)
+    x = tf.concat([x, tf.cast(idx, tf.float32) ],1)
+
+    return x
+
+
+def unpool2d_with_argmax(x, unpool_size=(2, 2), strides=(1, 1)):
+    """Apply 2D unpooling based on pooling indicies
+
+    # Arguments
+        x: List of 4D tensors with shape:
+        (batch_size, filters, rows, cols)
+        only 'channel_last' is supported
+        inputs[0] contains the inputTensor
+        inputs[1] contains the pooling maps,
+        i.e. the maps containing a mask 
+        representing the pooling indices's
+            
+        kernel_size: a tuple of 2 integers, specifying the
+                     width and height of the 2D pooling window.
+        strides: a tuple of 2 integers, specifying the strides
+                 of the pooling along the width and height.
+
+    # Returns
+        A 4d tensor with shape:
+        (batch_size, filters, new_rows, new_cols)
+
+    """
+
+    ''' get separate inputs, i.e. data and indices's 
+    '''
+    assert(len(inputs) == 2)
+    if x[1].dtype is not 'int32':
+        ind = tf.cast(x[1], tf.int32)
+    out = _preprocess_conv2d_input(x[0], data_format)
+    
+    # default to a stride of 2 because it is the one we use the most
+    ksize=[1, strides[0], strides[1], 1]
+    input_shape = out.get_shape().as_list()
+
+    #  calculation new shape
+    output_shape = input_shape
+    output_shape[0] = tf.shape(out)[0]    
+    output_shape[1] *= ksize[1]
+    output_shape[2] *= ksize[2]
+
+    ''' get ones mask for pooling indices's
+    '''
+    one_like_mask = tf.ones_like(ind, dtype=tf.int32)
+
+    ''' k.a.
+    '''
+    batch_range = tf.reshape(tf.range(output_shape[0], dtype=tf.int32), shape=[output_shape[0], 1, 1, 1])
+
+    ''' logic
+    '''
+    b = one_like_mask * batch_range
+    y = ind // (output_shape[2] * output_shape[3])
+    a = ind % (output_shape[2] * output_shape[3]) // output_shape[3]
+    feature_range = tf.range(output_shape[3], dtype=tf.int32)
+    f = one_like_mask * feature_range
+
+    # transpose indices's & reshape update values to one dimension
+    outSize = tf.size(out)
+    indices = tf.transpose(tf.reshape(tf.stack([b, y, a, f]), [4, outSize]))
+    values = tf.reshape(data, [outSize])
+    out = tf.scatter_nd(indices, values, output_shape)
+
+    return out
