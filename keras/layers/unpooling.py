@@ -8,8 +8,8 @@ from ..utils import conv_utils
 from ..legacy import interfaces
 
 class _UnpoolingIndex2D(Layer):
-    """Abstract class for different unpooling 2D layers with mutliple output
-       to support pool indicies as additional input
+    """Abstract class for different unpooling 2D layers with multiple output
+       to support pool indices's as additional input
     """
 
     def __init__(self, pool_size=(2, 2), strides=None, padding='valid',
