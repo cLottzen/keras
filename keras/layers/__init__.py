@@ -9,6 +9,7 @@ from .merge import *
 from .core import *
 from .convolutional import *
 from .pooling import *
+from .unpooling import *
 from .local import *
 from .recurrent import *
 from .normalization import *

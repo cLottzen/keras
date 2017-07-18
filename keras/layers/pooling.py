@@ -263,7 +263,7 @@ class MaxPoolingWithIndex2D(_Pooling2D):
     #@interfaces.legacy_pooling2d_support
     def __init__(self, pool_size=(2, 2), strides=None, padding='valid',
                  data_format=None, **kwargs):
-        super(MaxPoolingWithArgmax2D, self).__init__(pool_size, strides, padding,
+        super(MaxPoolingWithIndex2D, self).__init__(pool_size, strides, padding,
                                            data_format, **kwargs)
 
     def _pooling_function(self, inputs, pool_size, strides,
@@ -737,4 +737,4 @@ GlobalMaxPool3D = GlobalMaxPooling3D
 GlobalAvgPool1D = GlobalAveragePooling1D
 GlobalAvgPool2D = GlobalAveragePooling2D
 GlobalAvgPool3D = GlobalAveragePooling3D
-MaxPoolIndex2D =MaxPoolingWithIndex2D
+MaxPoolIndex2D = MaxPoolingWithIndex2D

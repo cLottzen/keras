@@ -3924,10 +3924,10 @@ def unpool2d_with_argmax(x, unpool_size=(2, 2), strides=(2, 2)):
 
     ''' get separate inputs, i.e. data and indices's 
     '''
-    assert(len(inputs) == 2)
+    assert(len(x) == 2)
     if x[1].dtype is not 'int32':
         ind = tf.cast(x[1], tf.int32)
-    out = _preprocess_conv2d_input(x[0], data_format)
+    out = x[0]
     
     # default to a stride of 2 because it is the one we use the most
     ksize=[1, strides[0], strides[1], 1]
@@ -3958,7 +3958,7 @@ def unpool2d_with_argmax(x, unpool_size=(2, 2), strides=(2, 2)):
     # transpose indices's & reshape update values to one dimension
     outSize = tf.size(out)
     indices = tf.transpose(tf.reshape(tf.stack([b, y, a, f]), [4, outSize]))
-    values = tf.reshape(data, [outSize])
+    values = tf.reshape(out, [outSize])
     out = tf.scatter_nd(indices, values, output_shape)
 
     return out

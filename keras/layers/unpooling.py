@@ -21,9 +21,6 @@ class _Unpooling2D(Layer):
         self.strides = conv_utils.normalize_tuple(strides, 2, 'strides')
         self.padding = conv_utils.normalize_padding(padding)
         self.data_format = conv_utils.normalize_data_format(data_format)
-
-        ''' new: here, we specify the expected input to be a list of two 4D-tensors
-        '''
         self.input_spec = [InputSpec(ndim=4), InputSpec(ndim=4)]
 
     def compute_output_shape(self, input_shape):
