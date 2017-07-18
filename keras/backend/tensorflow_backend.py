@@ -3892,11 +3892,10 @@ def pool2d_with_argmax(x, pool_size, strides=(1, 1),
     pool_size = (1,) + pool_size + (1,)
 
     x = _preprocess_conv2d_input(x, data_format)
+   
     x, idx = tf.nn.max_pool_with_argmax(x, pool_size, strides, padding=padding)
-    x = _postprocess_conv2d_output(x, data_format)
-    x = tf.concat([x, tf.cast(idx, tf.float32) ],1)
-
-    return x
+    
+    return _postprocess_conv2d_output(x, data_format), idx
 
 
 def unpool2d_with_argmax(x, unpool_size=(2, 2), strides=(2, 2)):

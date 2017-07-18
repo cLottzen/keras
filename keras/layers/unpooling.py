@@ -7,13 +7,14 @@ from ..engine import InputSpec
 from ..utils import conv_utils
 from ..legacy import interfaces
 
-class _Unpooling2D(Layer):
-    """Abstract class for different pooling 2D layers.
+class _UnpoolingIndex2D(Layer):
+    """Abstract class for different unpooling 2D layers with mutliple output
+       to support pool indicies as additional input
     """
 
     def __init__(self, pool_size=(2, 2), strides=None, padding='valid',
                  data_format=None, **kwargs):
-        super(_Unpooling2D, self).__init__(**kwargs)
+        super(_UnpoolingIndex2D, self).__init__(**kwargs)
         data_format = conv_utils.normalize_data_format(data_format)
         if strides is None:
             strides = pool_size
@@ -21,12 +22,12 @@ class _Unpooling2D(Layer):
         self.strides = conv_utils.normalize_tuple(strides, 2, 'strides')
         self.padding = conv_utils.normalize_padding(padding)
         self.data_format = conv_utils.normalize_data_format(data_format)
-        self.input_spec = [InputSpec(ndim=4), InputSpec(ndim=4)]
+        self.input_spec = [InputSpec(), InputSpec()]
 
     def compute_output_shape(self, input_shape):
         if self.data_format == 'channels_first':
-            rows = input_shape[2]
-            cols = input_shape[3]
+            rows = input_shape[0][2]
+            cols = input_shape[0][3]
         elif self.data_format == 'channels_last':
             rows = input_shape[0][1]
             cols = input_shape[0][2]
@@ -61,7 +62,7 @@ class _Unpooling2D(Layer):
 
 
 
-class UnpoolingIndex2D(_Unpooling2D):
+class UnpoolingIndex2D(_UnpoolingIndex2D):
 
     @interfaces.legacy_pooling2d_support
     def __init__(self, pool_size=(2, 2), strides=None, padding='valid',
@@ -72,10 +73,11 @@ class UnpoolingIndex2D(_Unpooling2D):
     def _pooling_function(self, inputs, pool_size, strides,
                           padding, data_format):
 
-        ''' not all keras standard parameters are supported yet
+        ''' not all keras standard parameters are supported yet, e.g
+            data_format and padding
         '''
         #output = K.unpool2d_with_argmax(inputs, pool_size, strides,
-        #                  padding, data_format)               
+        #                  padding, data_format)  
         output = K.unpool2d_with_argmax(inputs, pool_size, strides)
 
         return output
