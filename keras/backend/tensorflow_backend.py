@@ -3899,8 +3899,8 @@ def pool2d_with_argmax(x, pool_size, strides=(1, 1),
     return x
 
 
-def unpool2d_with_argmax(x, unpool_size=(2, 2), strides=(1, 1)):
-    """Apply 2D unpooling based on pooling indicies
+def unpool2d_with_argmax(x, unpool_size=(2, 2), strides=(2, 2)):
+    """Apply 2D unpooling based on pooling indices's
 
     # Arguments
         x: List of 4D tensors with shape:

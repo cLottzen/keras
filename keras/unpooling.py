@@ -1,25 +1,84 @@
-from keras import backend as K
-from keras.engine.topology import Layer
-import numpy as np
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
 
-class TODO_Unpooling(Layer):
+from .. import backend as K
+from ..engine import Layer
+from ..engine import InputSpec
+from ..utils import conv_utils
+from ..legacy import interfaces
 
-    def __init__(self, output_dim, **kwargs):
-        self.output_dim = output_dim
-        super(TODO_Unpooling, self).__init__(**kwargs)
+class _Unpooling2D(Layer):
+    """Abstract class for different pooling 2D layers.
+    """
 
-    def build(self, input_shape):
-        # Create a trainable weight variable for this layer.
-        self.kernel = self.add_weight(name='kernel', 
-                                      shape=(input_shape[1], self.output_dim),
-                                      initializer='uniform',
-                                      trainable=True)
-        super(TODO_Unpooling, self).build(input_shape)  # Be sure to call this somewhere!
+    def __init__(self, pool_size=(2, 2), strides=None, padding='valid',
+                 data_format=None, **kwargs):
+        super(_Unpooling2D, self).__init__(**kwargs)
+        data_format = conv_utils.normalize_data_format(data_format)
+        if strides is None:
+            strides = pool_size
+        self.pool_size = conv_utils.normalize_tuple(pool_size, 2, 'pool_size')
+        self.strides = conv_utils.normalize_tuple(strides, 2, 'strides')
+        self.padding = conv_utils.normalize_padding(padding)
+        self.data_format = conv_utils.normalize_data_format(data_format)
 
-    def call(self, x):
-        return K.dot(x, self.kernel)
+        ''' new: here, we specify the expected input to be a list of two 4D-tensors
+        '''
+        self.input_spec = [InputSpec(ndim=4), InputSpec(ndim=4)]
 
     def compute_output_shape(self, input_shape):
-        return (input_shape[0], self.output_dim)
+        if self.data_format == 'channels_first':
+            rows = input_shape[2]
+            cols = input_shape[3]
+        elif self.data_format == 'channels_last':
+            rows = input_shape[0][1]
+            cols = input_shape[0][2]
+
+        rows *= self.pool_size[0]
+        cols *= self.pool_size[1]
+
+        if self.data_format == 'channels_first':
+            return (input_shape[0][0], input_shape[0][1], rows, cols)
+        elif self.data_format == 'channels_last':
+            return (input_shape[0][0], rows, cols, input_shape[0][3])
+
+    def _pooling_function(self, inputs, pool_size, strides,
+                          padding, data_format):
+        raise NotImplementedError
+
+    def call(self, inputs):
+        output = self._pooling_function(inputs=inputs,
+                                        pool_size=self.pool_size,
+                                        strides=self.strides,
+                                        padding=self.padding,
+                                        data_format=self.data_format)
+        return output
+
+    def get_config(self):
+        config = {'pool_size': self.pool_size,
+                  'padding': self.padding,
+                  'strides': self.strides,
+                  'data_format': self.data_format}
+        base_config = super(_Unpooling2D, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
 
 
+
+class UnpoolingIndex2D(_Unpooling2D):
+
+    @interfaces.legacy_pooling2d_support
+    def __init__(self, pool_size=(2, 2), strides=None, padding='valid',
+                 data_format=None, **kwargs):
+        super(UnpoolingIndex2D, self).__init__(pool_size, strides, padding,
+                                           data_format, **kwargs)
+
+    def _pooling_function(self, inputs, pool_size, strides,
+                          padding, data_format):
+
+        ''' not all keras standard parameters are supported yet
+        '''
+        #output = K.unpool2d_with_argmax(inputs, pool_size, strides,
+        #                  padding, data_format)               
+        output = K.unpool2d_with_argmax(inputs, pool_size, strides)
+
+        return output
