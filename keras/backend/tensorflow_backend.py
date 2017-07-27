@@ -2787,6 +2787,7 @@ def sparse_categorical_crossentropy(output, target, from_logits=False):
         return res
 
 
+
 def binary_crossentropy(output, target, from_logits=False):
     """Binary crossentropy between an output tensor and a target tensor.
 
