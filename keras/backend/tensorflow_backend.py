@@ -2753,6 +2753,35 @@ def categorical_crossentropy(output, target, from_logits=False):
                                                        logits=output)
 
 
+def weighted_categorical_crossentropy(output, target, weights, from_logits=False):
+    """Categorical crossentropy between an output tensor and a target tensor.
+
+    # Arguments
+        output: A tensor resulting from a softmax
+            (unless `from_logits` is True, in which
+            case `output` is expected to be the logits).
+        target: A tensor of the same shape as `output`.
+        weights: list containing class weights
+        from_logits: Boolean, whether `output` is the
+            result of a softmax, or is a tensor of logits.
+
+    # Returns
+        Output tensor.
+    """
+    # Note: tf.nn.weighted_cross_entropy_with_logits
+    # expects logits, Keras expects probabilities.
+    if not from_logits:
+        # transform back to logits
+        epsilon = _to_tensor(_EPSILON, output.dtype.base_dtype)
+        output = tf.clip_by_value(output, epsilon, 1 - epsilon)
+        output = tf.log(output / (1 - output))
+
+    classes_weights = tf.constant(weights)
+    return tf.nn.weighted_cross_entropy_with_logits(targets=target,
+                                                    logits=output,
+                                                    pos_weight=classes_weights)
+
+
 def sparse_categorical_crossentropy(output, target, from_logits=False):
     """Categorical crossentropy with integer targets.
 
