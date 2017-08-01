@@ -2754,14 +2754,15 @@ def categorical_crossentropy(output, target, from_logits=False):
 
 
 def weighted_categorical_crossentropy(output, target, weights, from_logits=False):
-    """Categorical crossentropy between an output tensor and a target tensor.
+    """Weighted categorical crossentropy between an output tensor and a target
+       tensor.
 
     # Arguments
         output: A tensor resulting from a softmax
             (unless `from_logits` is True, in which
             case `output` is expected to be the logits).
         target: A tensor of the same shape as `output`.
-        weights: list containing class weights
+        weights: list containing class weights for each class.
         from_logits: Boolean, whether `output` is the
             result of a softmax, or is a tensor of logits.
 

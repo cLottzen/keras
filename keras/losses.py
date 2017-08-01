@@ -5,8 +5,13 @@ from .utils.generic_utils import deserialize_keras_object
 
 
 class WeightedLoss():
-
+    ''' class for using class weights with the standard Keras API for loss
+        functions
+    '''
     def __init__(self, weights):
+        ''' weights: a list of weights for each class label. The order has to
+            correspond to the one in the targets.
+        '''
         self.weights = weights
 
     def categorical_crossentropy(self, y_true, y_pred):
