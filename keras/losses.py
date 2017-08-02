@@ -14,7 +14,7 @@ class WeightedLoss():
         '''
         self.weights = weights
 
-    def categorical_crossentropy(self, y_true, y_pred):
+    def weighted_categorical_crossentropy(self, y_true, y_pred):
         return K.weighted_categorical_crossentropy(y_pred, y_true, self.weights)
 
 
