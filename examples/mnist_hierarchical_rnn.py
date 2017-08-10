@@ -61,6 +61,11 @@ y_test = keras.utils.to_categorical(y_test, num_classes)
 
 row, col, pixel = x_train.shape[1:]
 
+print(row)
+print(col)
+print(pixel)
+input('Please type something ;-)')
+
 # 4D input.
 x = Input(shape=(row, col, pixel))
 
@@ -88,3 +93,4 @@ model.fit(x_train, y_train,
 scores = model.evaluate(x_test, y_test, verbose=0)
 print('Test loss:', scores[0])
 print('Test accuracy:', scores[1])
+       
